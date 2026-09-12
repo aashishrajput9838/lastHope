@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 // Web app's Firebase configuration provided by user
 const firebaseConfig = {
@@ -32,4 +32,4 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export { app, auth, googleProvider, signInWithPopup, signOut, analytics };
+export { app, auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, analytics };

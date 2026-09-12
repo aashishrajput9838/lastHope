@@ -23,7 +23,12 @@ app.use(
     origin: function (origin, callback) {
       // allow requests with no origin (like mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
         return callback(null, true);
       }
       return callback(null, true); // Permissive in dev, cookie will match credentials
@@ -84,15 +89,19 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection & server start
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log(`[lastHope] Connected to MongoDB at ${MONGODB_URI}`);
-    app.listen(PORT, () => {
-      console.log(`[lastHope] Backend server running on http://localhost:${PORT}`);
+if (require.main === module) {
+  mongoose
+    .connect(MONGODB_URI)
+    .then(() => {
+      console.log(`[lastHope] Connected to MongoDB at ${MONGODB_URI}`);
+      app.listen(PORT, () => {
+        console.log(`[lastHope] Backend server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('[lastHope] Failed to connect to MongoDB:', err.message);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('[lastHope] Failed to connect to MongoDB:', err.message);
-    process.exit(1);
-  });
+}
+
+module.exports = app;
