@@ -1,0 +1,132 @@
+# Implementation Plan: LastHope Barista Coffee Game Landing Page & Game Gateway
+
+Build a visually stunning, coffee-themed landing page for the LastHope Barista Game at `/`, integrate it with the existing LastHope authentication system, create the protected `/game` route, and ensure a seamless player journey from landing to café shift.
+
+## User Review Required
+
+> [!IMPORTANT]
+> - Existing authentication infrastructure (JWT, cookies, MongoDB, Firebase Google OAuth, `/login`, `/signup`, `/dashboard`) will be 100% preserved.
+> - The root route `/` will now serve the new `LandingPage` (accessible to both visitors and logged-in players).
+> - The primary post-authentication destination will be `/game` (with `/dashboard` preserved for player account & session details).
+> - On the Landing Page, authenticated players will see dynamic personalized greetings ("Welcome back, {user.name}") and "CONTINUE SHIFT" buttons directly linking to `/game`.
+
+---
+
+## Proposed Changes
+
+### Design System & Styling
+
+#### [MODIFY] [index.css](file:///c:/github/lasthope/lastHope/frontend/src/index.css)
+- Add coffee-themed design tokens:
+  - `--coffee-dark: #1E120C`
+  - `--coffee-espresso: #2C1810`
+  - `--coffee-roast: #4A2E1B`
+  - `--coffee-caramel: #C87D38`
+  - `--coffee-warm-accent: #E56336`
+  - `--coffee-cream: #F5EDE6`
+  - `--coffee-foam: #FBF8F5`
+  - `--coffee-gold: #F59E0B`
+- Add game-specific animations:
+  - `@keyframes steamRise` (gentle coffee steam rising and dissolving)
+  - `@keyframes floatSlow` (floating coffee bean and badge effect)
+  - `@keyframes pulseGlow` (warm cafe button glow)
+- Add responsive layout styles for landing page sections: navbar, hero, coffee game visual, feature cards, how-to-play timeline, in-game mockup HUD, stats counter, CTA banner, and footer.
+- Preserve all existing auth card and form styles intact.
+
+---
+
+### Landing Page & Components
+
+#### [NEW] [LandingPage.jsx](file:///c:/github/lasthope/lastHope/frontend/src/pages/LandingPage.jsx)
+- **Navigation Bar**:
+  - Sticky frosted-glass bar with LastHope brand and Barista Game mark.
+  - Links: Home, How to Play, Features, About.
+  - Dynamic Auth Button:
+    - If logged out: "Sign In" (`/login`) + "Play Now" (`/login` with `from: /game`).
+    - If logged in: "Profile" (`/dashboard`) + "Continue Shift" (`/game`).
+- **Hero Section**:
+  - Headline: "BREW. SERVE. BUILD."
+  - Subtitle: "Step behind the counter and build your coffee empire, one perfect cup at a time."
+  - Dynamic Primary CTA: "PLAY NOW" (logged out) or "CONTINUE SHIFT" (logged in).
+  - Secondary CTA: "EXPLORE GAME" (smooth scroll to features).
+  - Central Hero Visual: Custom animated game art featuring an espresso machine with rising steam, portafilter, latte art cup, customer order ticket, beans, and bakery treats.
+- **Game Features ("Why You'll Love It")**:
+  - Master the Brew (recipes & mechanics).
+  - Serve Your Customers (satisfaction, queues & tips).
+  - Build Your Café (machine upgrades, custom interiors).
+  - Become a Barista Legend (daily rush, prestige & challenges).
+- **Interactive "How to Play" Game Progression**:
+  - 01 Take Order → 02 Brew Coffee → 03 Serve → 04 Earn → 05 Upgrade.
+- **In-Game Preview ("Step Inside The Café")**:
+  - Interactive browser preview of the Barista counter: customer ticket, recipe instructions, brew controls, tips & timer HUD.
+- **Game Stats Section**:
+  - 10+ Artisan Recipes, 20+ Customer Personalities, 50+ Café Upgrades, ∞ Cups to Brew.
+- **Final Call to Action**:
+  - "READY TO BREW? Your first customer is already waiting."
+  - CTA routing to `/game` or `/login`.
+- **Game Footer**:
+  - Brand identity, links, copyright, and coffee lore.
+
+---
+
+### Game Entry Page
+
+#### [NEW] [GamePage.jsx](file:///c:/github/lasthope/lastHope/frontend/src/pages/GamePage.jsx)
+- Protected game entry screen (`/game`).
+- Displays:
+  - Barista badge with authenticated player's name & avatar.
+  - "Welcome to the Café, {user.name}"
+  - "Your first order is waiting."
+  - Interactive "START SHIFT" game loader with animated barista station.
+  - Quick action toolbar: Settings, Sound/Music toggle, Profile (`/dashboard`), and Logout.
+
+---
+
+### Routing & Redirection Updates
+
+#### [MODIFY] [App.jsx](file:///c:/github/lasthope/lastHope/frontend/src/App.jsx)
+- Map `/` to `<LandingPage />` (public).
+- Add protected route `/game` to `<ProtectedRoute><GamePage /></ProtectedRoute>`.
+- Maintain `/dashboard` as protected `<ProtectedRoute><DashboardPage /></ProtectedRoute>`.
+- Keep `/login`, `/signup`, `/forgot-password` in `<PublicOnlyRoute>`.
+
+#### [MODIFY] [ProtectedRoute.jsx](file:///c:/github/lasthope/lastHope/frontend/src/components/ProtectedRoute.jsx)
+- Update `PublicOnlyRoute` redirect target: if an authenticated user accesses `/login` or `/signup`, redirect to `/game` (instead of `/dashboard`).
+
+#### [MODIFY] [LoginPage.jsx](file:///c:/github/lasthope/lastHope/frontend/src/pages/LoginPage.jsx)
+- Update redirect fallback from `location.state?.from?.pathname || '/dashboard'` to `location.state?.from?.pathname || '/game'`.
+- Add collapsible email & password form toggle ("Or sign in with email & password") below the Google button so users can authenticate using either Email+Password or 1-click Google OAuth without cluttering the UI.
+
+#### [MODIFY] [SignupPage.jsx](file:///c:/github/lasthope/lastHope/frontend/src/pages/SignupPage.jsx)
+- Update redirect fallback to `/game`.
+- Provide seamless Google sign-in or optional email sign-up.
+
+---
+
+## Verification Plan
+
+### Automated / Build Verification
+- Run `npm run build` in `frontend/` to confirm zero JSX, CSS, or import syntax errors.
+
+### Browser Verification
+1. **Unauthenticated Landing (`/`)**:
+   - Verify hero displays "BREW. SERVE. BUILD.", coffee game illustration with steam animation, feature cards, how-to-play, game preview, stats, and footer.
+   - Click "PLAY NOW" -> verify navigation to `/login` with `from: /game`.
+2. **Authentication Flow**:
+   - Sign in via Google OAuth on `/login`.
+   - Verify instant redirect to `/game`.
+3. **Protected Route Verification (`/game`)**:
+   - Verify `/game` renders player name, "START SHIFT" experience, barista HUD, and navigation.
+   - Refresh `/game` to verify session persistence via HTTP-only cookie.
+4. **Authenticated Landing Experience (`/`)**:
+   - Return to `/`.
+   - Verify navbar shows "Profile" and user greeting.
+   - Verify hero shows "Welcome back, {user.name}!" and primary CTA displays "CONTINUE SHIFT".
+   - Click "CONTINUE SHIFT" -> instantly opens `/game`.
+5. **Direct Unauthenticated Guard**:
+   - Logout.
+   - Directly navigate to `/game`.
+   - Verify automatic redirection to `/login`.
+6. **Responsive Layout**:
+   - Test viewport sizes: 375px (mobile), 768px (tablet), 1280px (laptop), 1920px (desktop).
+   - Ensure zero horizontal overflow and flawless typography.
